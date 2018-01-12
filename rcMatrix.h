@@ -131,46 +131,35 @@ struct CMatrix::rcmatrix
     	for(int i=0; i<this->rows; i++)
     		delete[] array[i];
     	delete[] array;
-    }        
-	void assign(int nrows , int ncols ,double** p)
-	{
-		if(rows!=nrows || cols != ncols) 
-		{ 	
-			rows=nrows; 
-			cols=ncols;		
-		}	
-		for ( int i=0;i<rows;i++)
-    		for(int j=0;j<cols;j++)
-				array[i][j]=p[i][j];	
-	}
+    }        	
 };
  //-------------End of structure---------------------
 
 
 
 //--------------------------Cref Class-----------------
-//-----------------------------------------------------
+
 class CMatrix::Cref
 {
 	friend class CMatrix;
 	CMatrix& s;
-	int i;
-	Cref(CMatrix&_s, int _i) : s(_s) , i(_i) {
+	int row;
+	Cref(CMatrix&_s, int _i) : s(_s) , row(_i) {
 		cout<<"Constructor 1 Cref CALLed\n\n"<<endl;
 	}
 	public:
-	double& operator[](int index)   
+	double& operator[](int col)   
 	{		
-		check(i,index); 		
+		s.check(row,col); 		
 		cout << "double CMatrix::operator[](int index) const R1111"<<endl;
-		return s.data->array[i][index];
+		return s.data->array[row][col];
 	}
 };
 
-CMatrix::Cref CMatrix::operator[](int index)    
+CMatrix::Cref CMatrix::operator[](int row)    
 {
 	cout<<"Cref CMatrix::operator[](int) called R2222" <<endl;
-	return Cref(*this,index); 		
+	return Cref(*this,row); 		
 }
 
 //---------------------------END OF CREF ----------------------------
@@ -204,7 +193,7 @@ CMatrix::CMatrix(int newrows,int newcols, double val1, double val2)
 	data = new rcmatrix(newrows,newcols,val1,val2); //using constructor 4
 } 
 
-CMatrix& CMatrix::operator = (const CMatrix& m)
+CMatrix & CMatrix::operator = (const CMatrix& m)
 {
 	if( &m == this )
     {
@@ -257,14 +246,13 @@ CMatrix operator * (const CMatrix& m1, const CMatrix& m2)
     return newMatrix;
 }
 
-inline void CMatrix::check (int i, int j) const
+inline void CMatrix::check (int row, int col) const
 {
-	if(data->rows<=i || data->cols <=j) 
+	if(data->rows<=row || data->cols <=col) 
 		throw IndexOutOfRange();
 }
 
-const double* CMatrix::operator[](int index) const
-{
+const double* CMatrix::operator[](int index) const { 
 	cout << "const double * CMatrix::operator[](int i) CALLED R3333"<<endl;
 	return data->array[index];
 } 
