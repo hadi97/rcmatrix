@@ -1,13 +1,12 @@
 
 #include <math.h>
 #include <fstream>
-using namespace std; ;
+using namespace std; 
 class IndexOutOfRange{};
 class WrongDim{};
  
 class CMatrix{
 	private:
-	 
 	struct rcmatrix;
 	rcmatrix* data;
 	 
@@ -36,8 +35,8 @@ struct CMatrix::rcmatrix
     int rows;
     int cols;
     int n;
- 
-	rcmatrix(fstream& file) //First constructor
+	rcmatrix () { };  // constructor 1	
+	rcmatrix(fstream& file) // constructor 2
 	{
 		file >> this->rows; 
 		file >> this->cols;
@@ -58,7 +57,7 @@ struct CMatrix::rcmatrix
 		this->n=1;
 	}
     
-	rcmatrix(int newrows, int newcols, double val) //Second constructor 
+	rcmatrix(int newrows, int newcols, double val) // constructor 3 
 	{
     	try
 		{
@@ -84,7 +83,7 @@ struct CMatrix::rcmatrix
     	this->n=1;
     }
  
-    rcmatrix(int newrows, int newcols, double val1, double val2) //Third constructor
+    rcmatrix(int newrows, int newcols, double val1, double val2) //constructor 4
 	{
     	try
     	{
@@ -105,15 +104,6 @@ struct CMatrix::rcmatrix
     	cols=newcols;
     	n=1;
     };
-	rcmatrix(int newrows, int newcols, double** temp) //fourth constructor 
-	{
-		rows=newrows;
-    	cols=newcols;
-        n=1;
-		for ( int i=0;i<cols;i++)
-			for (int j=0;i<rows;j++)
-				this->array[i][j]=temp[i][j];
-	}
     rcmatrix(rcmatrix &temp) // copy constructor 
 	{
     	this->rows=temp.rows;
@@ -142,15 +132,6 @@ struct CMatrix::rcmatrix
     		delete[] array[i];
     	delete[] array;
     }        
-    rcmatrix* det()
-	{
-    	if(n==1)
-            return this;
-		rcmatrix* t=new rcmatrix(rows,cols,array);
-    	n--;
-		return t;
-    }
-
 	void assign(int nrows , int ncols ,double** p)
 	{
 		if(rows!=nrows || cols != ncols) 
@@ -180,6 +161,7 @@ class CMatrix::Cref
 	public:
 	double& operator[](int index)   
 	{		
+		check(i,index); 		
 		cout << "double CMatrix::operator[](int index) const R1111"<<endl;
 		return s.data->array[i][index];
 	}
@@ -192,22 +174,18 @@ CMatrix::Cref CMatrix::operator[](int index)
 }
 
 //---------------------------END OF CREF ----------------------------
-//------------------------------------------------------------------- 
 inline CMatrix::CMatrix() 
 {
-	data = new rcmatrix(0,0,0.0); //using constructor 2
+	data = new rcmatrix(0,0,0.0); //using constructor 3
 }
 inline CMatrix::CMatrix(fstream& fs)
-{
-	data = new rcmatrix(fs); //using constructor 1 
+{	
+	data = new rcmatrix(fs); //using constructor 2 
 }
 
 inline CMatrix::CMatrix(const CMatrix &temp)
 {
-	if(data->n==1)
-		delete data;
-	data = new rcmatrix(0,0,0.0);
-	data->assign(temp.data->rows,temp.data->cols,temp.data->array);
+	data = new rcmatrix(*temp.data);  
 }
 
 CMatrix::~CMatrix()
@@ -218,7 +196,7 @@ CMatrix::~CMatrix()
 
 CMatrix::CMatrix(int newrows,int newcols, double val)
 {
-    data = new rcmatrix(newrows,newcols,val); //using constructor 2
+    data = new rcmatrix(newrows,newcols,val); //using constructor 3
 }
  
 CMatrix::CMatrix(int newrows,int newcols, double val1, double val2)
@@ -226,16 +204,18 @@ CMatrix::CMatrix(int newrows,int newcols, double val1, double val2)
 	data = new rcmatrix(newrows,newcols,val1,val2); //using constructor 4
 } 
 
-CMatrix& CMatrix::operator = (const CMatrix& temp)
+CMatrix& CMatrix::operator = (const CMatrix& m)
 {
-	
-    if( &temp == this ) // assignment to self?
+	if( &m == this )
     {
-        return *this;  // if so, don't assign, just return self
+        return *this;  
     }
-	if(data->n==1) 
-		data->assign(temp.data->rows,temp.data->cols,temp.data->array); 
-    
+	CMatrix temp (m);  
+	rcmatrix* k =data; 
+	data=temp.data; 
+	temp.data=k; 
+
+
 	return *this;      // allow a = b = c; assignment
 }
 
@@ -257,14 +237,13 @@ ostream & operator << (ostream & s, const CMatrix & matrix)
 	s << "]";
 	return s;
 }
-
-inline CMatrix operator * (const CMatrix& m1, const CMatrix& m2)
+CMatrix operator * (const CMatrix& m1, const CMatrix& m2)
 {
          
     if(m1.data->cols != m2.data->rows)
 		throw WrongDim();
          
-    CMatrix newMatrix(m1.data->rows, m2.data->cols,0.0);
+    CMatrix newMatrix(m1.data->rows, m2.data->cols,0.0);//constructor 2 
 	double var; 
     for(int i=0;i<newMatrix.data->rows;i++)
         for(int j=0;j<newMatrix.data->cols;j++)
@@ -289,4 +268,3 @@ const double* CMatrix::operator[](int index) const
 	cout << "const double * CMatrix::operator[](int i) CALLED R3333"<<endl;
 	return data->array[index];
 } 
-
